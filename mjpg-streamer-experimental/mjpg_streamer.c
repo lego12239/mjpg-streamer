@@ -90,13 +90,10 @@ Description.: pressing CTRL+C sends signals to this process instead of just
 Input Value.: sig tells us which signal was received
 Return Value: -
 ******************************************************************************/
-static void signal_handler(int sig)
+static void cleanup(void)
 {
     int i;
 
-    /* signal "stop" to threads */
-    LOG("setting signal to stop\n");
-    global.stop = 1;
     usleep(1000 * 1000);
 
     /* clean up threads */
@@ -150,8 +147,6 @@ static void signal_handler(int sig)
     LOG("done\n");
 
     closelog();
-    exit(0);
-    return;
 }
 
 static int split_parameters(char *parameter_string, int *argc, char **argv)
@@ -182,6 +177,64 @@ static int split_parameters(char *parameter_string, int *argc, char **argv)
     }
     *argc = count;
     return 1;
+}
+
+static void sig_init(void)
+{
+    sigset_t mask;
+    int ret;
+
+    sigemptyset(&mask);
+    /* ignore SIGPIPE (send by OS if transmitting to closed TCP sockets) */
+    sigaddset(&mask, SIGPIPE);
+    sigaddset(&mask, SIGTERM);
+    sigaddset(&mask, SIGINT);
+    sigaddset(&mask, SIGQUIT);
+    ret = pthread_sigmask(SIG_BLOCK, &mask, NULL);
+    if (ret != 0) {
+        LOG("Could not init signals: %s\n", strerror(ret));
+        closelog();
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void sig_show(char*);
+
+static void sig_wait_loop(void)
+{
+    sigset_t mask;
+    int ret, signo;
+
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGTERM);
+    sigaddset(&mask, SIGINT);
+
+   while ((ret = sigwait(&mask, &signo)) == 0) {
+        switch (signo) {
+        case SIGINT:
+        case SIGTERM:
+            LOG("Got signal %s - terminating\n", strsignal(signo));
+            global.stop = 1;
+            return;
+            break;
+        default:
+            LOG("Got signal %s (%d), but doesn't known how to handle it\n",
+              strsignal(signo), signo);
+            break;
+        }
+    }
+    LOG("sigwait() error: %s\n", strerror(ret));
+}
+
+static void sig_show(char *prefix)
+{
+    sigset_t mask;
+
+    sigpending(&mask);
+    if (sigismember(&mask, SIGTERM))
+    	LOG("%s: SIGTERM is pending\n", prefix);
+    else
+    	LOG("%s: SIGTERM is NOT pending\n", prefix);
 }
 
 /******************************************************************************
@@ -260,20 +313,7 @@ int main(int argc, char *argv[])
         daemon_mode();
     }
 
-    /* ignore SIGPIPE (send by OS if transmitting to closed TCP sockets) */
-    signal(SIGPIPE, SIG_IGN);
-
-    /* register signal handler for <CTRL>+C in order to clean up */
-    if(signal(SIGINT, signal_handler) == SIG_ERR) {
-        LOG("could not register signal handler\n");
-        closelog();
-        exit(EXIT_FAILURE);
-    }
-    if(signal(SIGTERM, signal_handler) == SIG_ERR) {
-        LOG("could not register signal handler\n");
-        closelog();
-        exit(EXIT_FAILURE);
-    }
+    sig_init();
 
     /*
      * messages like the following will only be visible on your terminal
@@ -421,7 +461,11 @@ int main(int argc, char *argv[])
     }
 
     /* wait for signals */
-    pause();
+    while (!global.stop) {
+	    sig_wait_loop();
+	}
+
+    cleanup();
 
     return 0;
 }
