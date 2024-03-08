@@ -79,6 +79,8 @@ struct _control {
 
 struct _globals {
     int stop;
+    /* Main thread id */
+    pthread_t tid_main;
 
     /* input plugin */
     input in[MAX_INPUT_PLUGINS];

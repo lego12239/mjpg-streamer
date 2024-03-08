@@ -830,6 +830,7 @@ endloop:
 
     DBG("leaving input thread, calling cleanup function now\n");
     pthread_cleanup_pop(1);
+    pthread_kill(pglobal->tid_main, SIGTERM);
 
     return NULL;
 }

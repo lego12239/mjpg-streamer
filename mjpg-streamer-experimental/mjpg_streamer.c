@@ -198,6 +198,7 @@ int main(int argc, char *argv[])
     size_t tmp = 0;
 
     output[0] = "output_http.so --port 8080";
+    global.tid_main = pthread_self();
     global.outcnt = 0;
     global.incnt = 0;
 
