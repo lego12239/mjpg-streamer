@@ -268,6 +268,11 @@ int main(int argc, char *argv[])
         closelog();
         exit(EXIT_FAILURE);
     }
+    if(signal(SIGTERM, signal_handler) == SIG_ERR) {
+        LOG("could not register signal handler\n");
+        closelog();
+        exit(EXIT_FAILURE);
+    }
 
     /*
      * messages like the following will only be visible on your terminal
