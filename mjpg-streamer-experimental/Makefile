@@ -11,11 +11,12 @@
 .DEFAULT_GOAL: all
 .PHONY: all clean distclean install
 	
+PREFIX ?= /usr/local/
 CMAKE_BUILD_TYPE ?= Release
 	
 all:
 	[ -d _build ] || mkdir _build
-	[ -f _build/Makefile ] || (cd _build && cmake  -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) ..)
+	[ -f _build/Makefile ] || (cd _build && cmake  -DCMAKE_INSTALL_PREFIX=$(PREFIX) -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) ..)
 	make -C _build
 	
 	@cp _build/mjpg_streamer .
