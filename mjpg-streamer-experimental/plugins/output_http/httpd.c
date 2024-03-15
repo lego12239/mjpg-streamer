@@ -1438,8 +1438,10 @@ void server_cleanup(void *arg)
 
     OPRINT("cleaning up resources allocated by server thread #%02d\n", pcontext->id);
 
-    for(i = 0; i < MAX_SD_LEN; i++)
-        close(pcontext->sd[i]);
+    for(i = 0; i < MAX_SD_LEN; i++) {
+		if (pcontext->sd[i] >= 0)
+	        close(pcontext->sd[i]);
+    }
 }
 
 /******************************************************************************

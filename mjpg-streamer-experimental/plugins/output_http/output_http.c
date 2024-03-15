@@ -144,7 +144,7 @@ int output_init(output_parameter *param, int id)
             DBG("case 2,3\n");
             port = htons(atoi(optarg));
             break;
-       
+
             /* Interface name */
 	case 4:
 	case 5:
