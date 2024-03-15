@@ -94,7 +94,6 @@ static void cleanup(void)
 {
     int i;
 
-    usleep(1000 * 1000);
 
     /* clean up threads */
     LOG("force cancellation of threads and cleanup resources\n");
@@ -465,6 +464,7 @@ int main(int argc, char *argv[])
 	    sig_wait_loop();
 	}
 
+    usleep(1000 * 1000);
     cleanup();
 
     return 0;
