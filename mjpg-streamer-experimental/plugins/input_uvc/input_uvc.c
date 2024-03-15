@@ -482,7 +482,8 @@ int input_stop(int id)
     context *pctx = (context*)in->context;
 
     DBG("will cancel camera thread #%02d\n", id);
-    pthread_cancel(pctx->threadID);
+    //pthread_cancel(pctx->threadID);
+    pthread_kill(pctx->threadID, SIGKILL);
     return 0;
 }
 

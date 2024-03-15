@@ -210,7 +210,8 @@ int output_stop(int id)
 {
 
     DBG("will cancel server thread #%02d\n", id);
-    pthread_cancel(servers[id].threadID);
+    //pthread_cancel(servers[id].threadID);
+    pthread_kill(servers[id].threadID, SIGKILL);
 
     return 0;
 }
